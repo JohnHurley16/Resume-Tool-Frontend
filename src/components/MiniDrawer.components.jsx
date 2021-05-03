@@ -1,6 +1,14 @@
 import React from 'react';
+
+import { useImageStore } from '../states/ImageStore.states'
+import { useSignUpStore } from '../states/SignUp.states'
+
+import MuiModal from './MuiModal.components'
+import SignIn from './SignIn.components'
+
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
+import Avatar from '@material-ui/core/Avatar'
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -18,6 +26,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import SubjectOutlinedIcon from '@material-ui/icons/SubjectOutlined';
 import AssignmentIndOutlinedIcon from '@material-ui/icons/AssignmentIndOutlined';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import AccountBoxOutlinedIcon from '@material-ui/icons/AccountBoxOutlined';
 
 const drawerWidth = 240;
 
@@ -77,6 +86,9 @@ const useStyles = makeStyles((theme) => ({
         // necessary for content to be below app bar
         ...theme.mixins.toolbar,
     },
+    signerModal: {
+        marginLeft: 'auto'
+    },
     settingsButton: {
         marginTop: 'auto'
     },
@@ -89,7 +101,16 @@ const useStyles = makeStyles((theme) => ({
 export default function MiniDrawer(props) {
     const classes = useStyles();
     const theme = useTheme();
-    const [open, setOpen] = React.useState(false);
+
+    const [open, setOpen] = React.useState(false)
+
+    const profileImage = useImageStore(state => state.image)
+
+    const signerOpen = useSignUpStore(state => state.open)
+    const setSignerOpen = useSignUpStore(state => state.setOpen)
+    const setSignerClosed = useSignUpStore(state => state.setClosed)
+
+    const [loggedIn, setLoggedIn] = React.useState(false)
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -102,6 +123,15 @@ export default function MiniDrawer(props) {
     const handleSelectedChange = (e) => {
         props.setSelected(e.target.id)
         console.log(props.selected)
+    }
+
+    const handleSignerClick = () => {
+        if (!signerOpen) {
+            setSignerOpen()
+        } else {
+            setSignerClosed()
+        }
+        console.log(signerOpen)
     }
 
     return (
@@ -128,6 +158,13 @@ export default function MiniDrawer(props) {
                     <Typography variant="h6" noWrap>
                         Hurley Resume Builder
                     </Typography>
+                    <IconButton
+                        color="inherit"
+                        className={classes.signerModal}
+                        onClick={handleSignerClick}
+                    >
+                        {profileImage ? <Avatar src={profileImage} /> : <AccountBoxOutlinedIcon />}
+                    </IconButton>
                 </Toolbar>
             </AppBar>
             <Drawer
@@ -166,6 +203,9 @@ export default function MiniDrawer(props) {
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.toolbar} />
+                <MuiModal open={signerOpen} handleClose={handleSignerClick}>
+                    <SignIn />
+                </MuiModal>
                 <div>
                     {props.children}
                 </div>
