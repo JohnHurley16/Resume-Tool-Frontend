@@ -4,6 +4,7 @@ import { useImageStore } from '../states/ImageStore.states'
 import { useSignUpStore } from '../states/SignUp.states'
 
 import MuiModal from './MuiModal.components'
+import SignUp from './SignUp.components'
 import SignIn from './SignIn.components'
 
 import clsx from 'clsx';
@@ -109,6 +110,7 @@ export default function MiniDrawer(props) {
     const signerOpen = useSignUpStore(state => state.open)
     const setSignerOpen = useSignUpStore(state => state.setOpen)
     const setSignerClosed = useSignUpStore(state => state.setClosed)
+    const signerOption = useSignUpStore(state => state.upOrIn)
 
     const [loggedIn, setLoggedIn] = React.useState(false)
 
@@ -204,7 +206,7 @@ export default function MiniDrawer(props) {
             <main className={classes.content}>
                 <div className={classes.toolbar} />
                 <MuiModal open={signerOpen} handleClose={handleSignerClick}>
-                    <SignIn />
+                    {signerOption === 'in' ? <SignIn /> : <SignUp />}
                 </MuiModal>
                 <div>
                     {props.children}

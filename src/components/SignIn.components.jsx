@@ -2,6 +2,8 @@ import React from 'react';
 
 import ImageUploadIcon from './ImageUpload.component'
 
+import { useSignUpStore } from '../states/SignUp.states'
+
 import axios from 'axios'
 
 import Button from '@material-ui/core/Button';
@@ -32,6 +34,9 @@ const useStyles = makeStyles((theme) => ({
     },
     submit: {
         margin: theme.spacing(3, 0, 2),
+    },
+    signup: {
+        margin: theme.spacing(1, 0, 1)
     },
     createText: {
         marginTop: theme.spacing(2)
@@ -68,6 +73,18 @@ export default function SignIn() {
                 console.log(res);
                 console.log(res.data);
             })
+    }
+
+    const openSignUp = useSignUpStore(state => state.setOpen)
+    const setSignUp = useSignUpStore(state => state.setSignUp)
+    const signerOption = useSignUpStore(state => state.upOrIn)
+
+    const gotoSignUp = (e) => {
+        e.preventDefault();
+        if (signerOption === "in") {
+            setSignUp()
+            console.log(signerOption)
+        }
     }
 
     return (
@@ -114,6 +131,13 @@ export default function SignIn() {
                     >
                         Sign In
                     </Button>
+                    <Grid container justify="flex-end">
+                        <Grid item>
+                            <Button onClick={gotoSignUp} variant="body2">
+                                Sign Up
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </form>
             </div>
         </Container>

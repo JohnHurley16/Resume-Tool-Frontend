@@ -45,11 +45,20 @@ export default function SignUp() {
 
     const closeModal = useSignUpStore(state => state.setClosed)
 
+    const setSignIn = useSignUpStore(state => state.setSignIn)
+    const signerOption = useSignUpStore(state => state.upOrIn)
+
     const [fname, setFname] = React.useState(null);
     const [lname, setLname] = React.useState(null);
     const [email, setEmail] = React.useState(null);
     const [password, setPassword] = React.useState(null);
     const [username, setUsername] = React.useState(null);
+
+    const openSignIn = () => {
+        if (signerOption === 'up') {
+            setSignIn()
+        }
+    }
 
 
     const handleSubmit = (event) => {
@@ -160,9 +169,9 @@ export default function SignUp() {
                     </Button>
                     <Grid container justify="flex-end">
                         <Grid item>
-                            <Link href="#" variant="body2">
+                            <Button onClick={openSignIn} variant="body2">
                                 Already have an account? Sign in
-                            </Link>
+                            </Button>
                         </Grid>
                     </Grid>
                 </form>
