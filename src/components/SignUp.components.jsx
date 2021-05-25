@@ -1,16 +1,17 @@
 import React from 'react';
 
-import axios from 'axios'
-
 import ImageUploadIcon from './ImageUpload.component'
 
 import { useSignUpStore } from '../states/SignUp.states'
 
+import { useAuth } from '../contexts/AuthContext'
+import { createUserProfileDocument } from '../utils/firebase'
+
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
+import Alert from '@material-ui/lab/Alert';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 
@@ -36,6 +37,9 @@ const useStyles = makeStyles((theme) => ({
     },
     topInput: {
         marginTop: theme.spacing(2)
+    },
+    alert: {
+        marginTop: theme.spacing(2)
     }
 }));
 
@@ -45,38 +49,51 @@ export default function SignUp() {
 
     const closeModal = useSignUpStore(state => state.setClosed)
 
+    const setSignIn = useSignUpStore(state => state.setSignIn)
+    const signerOption = useSignUpStore(state => state.upOrIn)
+
+    const { signup } = useAuth()
+
     const [fname, setFname] = React.useState(null);
     const [lname, setLname] = React.useState(null);
     const [email, setEmail] = React.useState(null);
     const [password, setPassword] = React.useState(null);
-    const [username, setUsername] = React.useState(null);
+    const [passwordConfirm, setPasswordConfirm] = React.useState(null);
+    const [displayName, setDisplayName] = React.useState(null);
+
+    const [loading, setLoading] = React.useState(false)
+    const [error, setError] = React.useState('')
 
 
-    const handleSubmit = (event) => {
+    const openSignIn = () => {
+        if (signerOption === 'up') {
+            setSignIn()
+        }
+    }
+
+    async function handleSubmit(event) {
         event.preventDefault();
         console.log(`Email: ${email}`)
-        const payload = {
-            fname: fname,
-            lname: lname,
-            email: email,
-            password: password,
-            username: username
+
+        if (password !== passwordConfirm) {
+            return setError('Passwords do not match')
         }
 
-        const hostname = '127.0.0.1'
-        const port = 4000
+        try {
+            setError('')
+            setLoading(true)
+            const { user } = await signup(email, password)
+            await createUserProfileDocument(user, { displayName })
+            setTimeout(function () {
+                setSignIn()
+            }, 500)
+            closeModal()
+        } catch (e) {
+            console.log(e)
+            setError(e.message)
+        }
+        setLoading(false)
 
-        const request_url = `http://${hostname}:${port}/user/create`
-
-        console.log(request_url)
-
-        axios.post(request_url, payload)
-            .then(res => {
-                console.log(res);
-                console.log(res.data);
-            })
-
-        closeModal()
     }
 
     return (
@@ -84,18 +101,20 @@ export default function SignUp() {
             <CssBaseline />
             <div className={classes.paper}>
                 <ImageUploadIcon />
+                {error && <Alert className={classes.alert} variant="filled" severity='error'> {error} </Alert>}
+
                 <form className={classes.form} onSubmit={handleSubmit}>
                     <Grid container spacing={2}>
                         <Grid />
                         <Grid item xs={12}>
                             <TextField
                                 autoComplete="username"
-                                name="userName"
+                                name="displayName"
                                 variant="outlined"
                                 required
                                 fullWidth
-                                onInput={e => setUsername(e.target.value)}
-                                id="userName"
+                                onInput={e => setDisplayName(e.target.value)}
+                                id="displayName"
                                 label="Username"
                             />
                         </Grid>
@@ -148,8 +167,22 @@ export default function SignUp() {
                                 onInput={e => setPassword(e.target.value)}
                             />
                         </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                variant="outlined"
+                                required
+                                fullWidth
+                                name="password-confirm"
+                                label="Password-confirm"
+                                type="password"
+                                id="password-confirm"
+                                autoComplete="current-password"
+                                onInput={e => setPasswordConfirm(e.target.value)}
+                            />
+                        </Grid>
                     </Grid>
                     <Button
+                        disabled={loading}
                         type="submit"
                         fullWidth
                         variant="contained"
@@ -160,9 +193,9 @@ export default function SignUp() {
                     </Button>
                     <Grid container justify="flex-end">
                         <Grid item>
-                            <Link href="#" variant="body2">
+                            <Button onClick={openSignIn} variant="body2">
                                 Already have an account? Sign in
-                            </Link>
+                            </Button>
                         </Grid>
                     </Grid>
                 </form>
