@@ -2,7 +2,11 @@ import React from 'react';
 
 import { useSignUpStore } from '../states/SignUp.states'
 
-import axios from 'axios'
+import { signInWithGoogle } from '../utils/firebase'
+
+import { useAuth } from "../contexts/AuthContext"
+
+import clsx from 'clsx'
 
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -11,10 +15,11 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import Alert from '@material-ui/lab/Alert';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
-        marginTop: theme.spacing(8),
+        marginTop: theme.spacing(2),
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -37,50 +42,74 @@ const useStyles = makeStyles((theme) => ({
     },
     createText: {
         marginTop: theme.spacing(2)
+    },
+    google: {
+        backgroundColor: '#4285f4',
+        color: 'white',
+
+        hover: {
+            backgroundColor: '#357ae8',
+            border: 'none'
+        }
     }
 }));
 
 export default function SignIn() {
     const classes = useStyles();
 
-    const [password, setPassword] = React.useState(null);
-    const [username, setUsername] = React.useState(null);
+    const { login } = useAuth();
 
-    const handleSubmit = (e) => {
+    const closeModal = useSignUpStore(state => state.setClosed)
+
+    const [password, setPassword] = React.useState(null);
+    const [email, setEmail] = React.useState(null);
+
+    const [error, setError] = React.useState('')
+    const [loading, setLoading] = React.useState(false)
+
+    async function handleSubmit(e) {
         e.preventDefault();
 
-        const payload = {
-            username: { username }
+        try {
+            setError("")
+            setLoading(true)
+            await login(email, password)
+            closeModal()
+        } catch (err) {
+            setError("Failed to log in")
         }
-
-        const hostname = '127.0.0.1'
-        const port = 4000
-
-        const request_url = `http://${hostname}:${port}/user/login`
-
-        console.log(username)
-
-        axios.get(request_url, {
-            body: {
-                username: username
-            }
-        }
-        )
-            .then(res => {
-                console.log(res);
-                console.log(res.data);
-            })
+        setLoading(false)
     }
 
-    const openSignUp = useSignUpStore(state => state.setOpen)
+    async function googleSignIn(e) {
+        e.preventDefault();
+
+        try {
+            setError("")
+            setLoading(true)
+            await signInWithGoogle()
+            closeModal()
+        } catch (err) {
+            setError("Failed to log in")
+        }
+        setLoading(false)
+    }
+
     const setSignUp = useSignUpStore(state => state.setSignUp)
+    const setReset = useSignUpStore(state => state.setReset)
     const signerOption = useSignUpStore(state => state.upOrIn)
 
     const gotoSignUp = (e) => {
         e.preventDefault();
         if (signerOption === "in") {
             setSignUp()
-            console.log(signerOption)
+        }
+    }
+
+    const gotoReset = (e) => {
+        e.preventDefault();
+        if (signerOption === "in") {
+            setReset()
         }
     }
 
@@ -91,6 +120,7 @@ export default function SignIn() {
                 <Typography component="h1" variant="h5" className={classes.createText}>
                     Sign In
                 </Typography>
+                {error && <Alert className={classes.alert} variant="filled" severity='error'> {error} </Alert>}
                 <form className={classes.form} onSubmit={handleSubmit} >
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
@@ -98,11 +128,11 @@ export default function SignIn() {
                                 variant="outlined"
                                 required
                                 fullWidth
-                                id="username"
-                                label="Username"
-                                name="username"
-                                autoComplete="username"
-                                onInput={e => setUsername(e.target.value)}
+                                id="email"
+                                label="Email"
+                                name="email"
+                                autoComplete="email"
+                                onInput={e => setEmail(e.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -119,22 +149,45 @@ export default function SignIn() {
                             />
                         </Grid>
                     </Grid>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className={classes.submit}
-                    >
-                        Sign In
-                    </Button>
-                    <Grid container justify="flex-end">
-                        <Grid item>
-                            <Button onClick={gotoSignUp} variant="body2">
-                                Sign Up
+
+                    <Grid spacing={2} container>
+                        <Grid item xs={12} sm={6}>
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                color="primary"
+                                className={classes.submit}
+                                disabled={loading}
+                            >
+                                Sign In
                             </Button>
                         </Grid>
-                    </Grid>+
+                        <Grid item xs={12} sm={6}>
+                            <Button
+                                onClick={googleSignIn}
+                                fullWidth
+                                variant="contained"
+                                color="primary"
+                                className={clsx(classes.submit, classes.google)}
+                                disabled={loading}
+                            > {' '} Sign in with Google {' '}
+                            </Button>
+                        </Grid>
+                    </Grid>
+
+                    <Grid container spacing={0}>
+                        <Grid item xs={12} sm={6}>
+                            <Button fullWidth onClick={gotoReset} variant="body2">
+                                Forgot Password?
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button fullWidth onClick={gotoSignUp} variant="body2">
+                                Need an account? Sign Up
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </form>
             </div>
         </Container>

@@ -7,4 +7,5 @@ export const useSignUpStore = create(set => ({
     setClosed: () => set({ open: false }),
     setSignIn: () => set({ upOrIn: 'in' }),
     setSignUp: () => set({ upOrIn: 'up' }),
+    setReset: () => set({ upOrIn: 'reset' })
 }))

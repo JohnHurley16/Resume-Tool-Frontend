@@ -2,10 +2,12 @@ import React from 'react';
 
 import { useImageStore } from '../states/ImageStore.states'
 import { useSignUpStore } from '../states/SignUp.states'
+import { useProfileMenuStore } from '../states/ProfileMenu.states'
+
+import { useAuth } from '../contexts/AuthContext'
 
 import MuiModal from './MuiModal.components'
-import SignUp from './SignUp.components'
-import SignIn from './SignIn.components'
+import CustomizedMenus from './ProfileDropdown.component'
 
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
@@ -103,46 +105,52 @@ export default function MiniDrawer(props) {
     const classes = useStyles();
     const theme = useTheme();
 
-    const [open, setOpen] = React.useState(false)
+    const { currentUser } = useAuth()
+
+    const [drawerOpen, setDrawerOpen] = React.useState(false)
 
     const profileImage = useImageStore(state => state.image)
 
     const signerOpen = useSignUpStore(state => state.open)
     const setSignerOpen = useSignUpStore(state => state.setOpen)
     const setSignerClosed = useSignUpStore(state => state.setClosed)
-    const signerOption = useSignUpStore(state => state.upOrIn)
 
-    const [loggedIn, setLoggedIn] = React.useState(false)
+    const openMenu = useProfileMenuStore(state => state.setOpen)
+    const setMenuTarget = useProfileMenuStore(state => state.setTarget)
 
     const handleDrawerOpen = () => {
-        setOpen(true);
+        setDrawerOpen(true);
     };
 
     const handleDrawerClose = () => {
-        setOpen(false);
+        setDrawerOpen(false);
     };
 
     const handleSelectedChange = (e) => {
         props.setSelected(e.target.id)
-        console.log(props.selected)
     }
 
-    const handleSignerClick = () => {
+    const handleSignerClick = (e) => {
+
         if (!signerOpen) {
-            setSignerOpen()
+            if (!currentUser) {
+                setSignerOpen()
+            } else {
+                setMenuTarget(e.currentTarget)
+                openMenu()
+            }
         } else {
             setSignerClosed()
         }
-        console.log(signerOpen)
     }
-
+    //TODO: Split this mess up into smaller components 
     return (
         <div className={classes.root}>
             <CssBaseline />
             <AppBar
                 position="fixed"
                 className={clsx(classes.appBar, {
-                    [classes.appBarShift]: open,
+                    [classes.appBarShift]: drawerOpen,
                 })}
             >
                 <Toolbar>
@@ -152,7 +160,7 @@ export default function MiniDrawer(props) {
                         onClick={handleDrawerOpen}
                         edge="start"
                         className={clsx(classes.menuButton, {
-                            [classes.hide]: open,
+                            [classes.hide]: drawerOpen,
                         })}
                     >
                         <MenuIcon />
@@ -172,13 +180,13 @@ export default function MiniDrawer(props) {
             <Drawer
                 variant="permanent"
                 className={clsx(classes.drawer, {
-                    [classes.drawerOpen]: open,
-                    [classes.drawerClose]: !open,
+                    [classes.drawerOpen]: drawerOpen,
+                    [classes.drawerClose]: !drawerOpen,
                 })}
                 classes={{
                     paper: clsx({
-                        [classes.drawerOpen]: open,
-                        [classes.drawerClose]: !open,
+                        [classes.drawerOpen]: drawerOpen,
+                        [classes.drawerClose]: !drawerOpen,
                     }),
                 }}
             >
@@ -205,13 +213,12 @@ export default function MiniDrawer(props) {
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.toolbar} />
-                <MuiModal open={signerOpen} handleClose={handleSignerClick}>
-                    {signerOption === 'in' ? <SignIn /> : <SignUp />}
-                </MuiModal>
+                {currentUser ? <CustomizedMenus /> : <MuiModal />}
                 <div>
                     {props.children}
+                    {currentUser && JSON.stringify(currentUser.email)}
                 </div>
             </main>
-        </div>
+        </div >
     );
 }
