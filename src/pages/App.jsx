@@ -1,21 +1,25 @@
 import React from 'react';
 
-import { AuthProvider } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 
 import '../styles/App.styles.css';
 import MiniDrawer from '../components/MiniDrawer.components'
+import MuiModal from '../components/MuiModal.components'
+import CustomizedMenus from '../components/ProfileDropdown.component'
 
 function App() {
   const [selected, setSelected] = React.useState();
 
+  const { currentUser } = useAuth();
+
+
   return (
-    <AuthProvider>
-      <div className="App">
-        <MiniDrawer selected={selected} setSelected={setSelected}>
-          <h1>{selected}</h1>
-        </MiniDrawer>
-      </div>
-    </AuthProvider>
+    <div className="App">
+      <MiniDrawer setSelected={setSelected}>
+        {currentUser ? <CustomizedMenus /> : <MuiModal />}
+        <h1>{selected}</h1>
+      </MiniDrawer>
+    </div>
   );
 }
 
