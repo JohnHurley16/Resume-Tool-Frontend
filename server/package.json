@@ -1,0 +1,25 @@
+{
+  "name": "rest-server",
+  "version": "1.0.0",
+  "description": "rest-api server for resume tool ",
+  "main": "server.js",
+  "author": "Jack Hurley <jhurleydev@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "env NODE_ENV=development nodemon src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "helmet": "^4.5.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.6.0",
+    "sequelize": "5.21.7"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
