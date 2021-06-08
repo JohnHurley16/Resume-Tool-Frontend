@@ -1,26 +1,13 @@
 import React from 'react';
 
-import { useImageStore } from '../states/ImageStore.states'
-import { useSignUpStore } from '../states/SignUp.states'
-import { useProfileMenuStore } from '../states/ProfileMenu.states'
-
-import { useAuth } from '../contexts/AuthContext'
-
-import MuiModal from './MuiModal.components'
-import CustomizedMenus from './ProfileDropdown.component'
-
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import Avatar from '@material-ui/core/Avatar'
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
@@ -29,7 +16,11 @@ import ListItemText from '@material-ui/core/ListItemText';
 import SubjectOutlinedIcon from '@material-ui/icons/SubjectOutlined';
 import AssignmentIndOutlinedIcon from '@material-ui/icons/AssignmentIndOutlined';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-import AccountBoxOutlinedIcon from '@material-ui/icons/AccountBoxOutlined';
+
+import { useAppDrawerStore } from '../states/AppDrawer.states'
+import { useAuth } from '../contexts/AuthContext'
+import CustomToolbar from './Toolbar.component'
+
 
 const drawerWidth = 240;
 
@@ -89,9 +80,6 @@ const useStyles = makeStyles((theme) => ({
         // necessary for content to be below app bar
         ...theme.mixins.toolbar,
     },
-    signerModal: {
-        marginLeft: 'auto'
-    },
     settingsButton: {
         marginTop: 'auto'
     },
@@ -107,42 +95,18 @@ export default function MiniDrawer(props) {
 
     const { currentUser } = useAuth()
 
-    const [drawerOpen, setDrawerOpen] = React.useState(false)
-
-    const profileImage = useImageStore(state => state.image)
-
-    const signerOpen = useSignUpStore(state => state.open)
-    const setSignerOpen = useSignUpStore(state => state.setOpen)
-    const setSignerClosed = useSignUpStore(state => state.setClosed)
-
-    const openMenu = useProfileMenuStore(state => state.setOpen)
-    const setMenuTarget = useProfileMenuStore(state => state.setTarget)
-
-    const handleDrawerOpen = () => {
-        setDrawerOpen(true);
-    };
+    const drawerState = useAppDrawerStore(state => state.open)
+    const setDrawerClosed = useAppDrawerStore(state => state.setClosed)
 
     const handleDrawerClose = () => {
-        setDrawerOpen(false);
+        setDrawerClosed();
     };
 
     const handleSelectedChange = (e) => {
         props.setSelected(e.target.id)
+        console.log(e.target)
     }
 
-    const handleSignerClick = (e) => {
-
-        if (!signerOpen) {
-            if (!currentUser) {
-                setSignerOpen()
-            } else {
-                setMenuTarget(e.currentTarget)
-                openMenu()
-            }
-        } else {
-            setSignerClosed()
-        }
-    }
     //TODO: Split this mess up into smaller components 
     return (
         <div className={classes.root}>
@@ -150,43 +114,21 @@ export default function MiniDrawer(props) {
             <AppBar
                 position="fixed"
                 className={clsx(classes.appBar, {
-                    [classes.appBarShift]: drawerOpen,
+                    [classes.appBarShift]: drawerState,
                 })}
             >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={handleDrawerOpen}
-                        edge="start"
-                        className={clsx(classes.menuButton, {
-                            [classes.hide]: drawerOpen,
-                        })}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap>
-                        Hurley Resume Builder
-                    </Typography>
-                    <IconButton
-                        color="inherit"
-                        className={classes.signerModal}
-                        onClick={handleSignerClick}
-                    >
-                        {profileImage ? <Avatar src={profileImage} /> : <AccountBoxOutlinedIcon />}
-                    </IconButton>
-                </Toolbar>
+                <CustomToolbar />
             </AppBar>
             <Drawer
                 variant="permanent"
                 className={clsx(classes.drawer, {
-                    [classes.drawerOpen]: drawerOpen,
-                    [classes.drawerClose]: !drawerOpen,
+                    [classes.drawerOpen]: drawerState,
+                    [classes.drawerClose]: !drawerState,
                 })}
                 classes={{
                     paper: clsx({
-                        [classes.drawerOpen]: drawerOpen,
-                        [classes.drawerClose]: !drawerOpen,
+                        [classes.drawerOpen]: drawerState,
+                        [classes.drawerClose]: !drawerState,
                     }),
                 }}
             >
@@ -199,8 +141,10 @@ export default function MiniDrawer(props) {
                 <List>
                     {['Home', 'View CV', 'Edit CV', 'Create Resume'].map((text, index) => (
                         <ListItem button onClick={handleSelectedChange} key={text} id={text}>
-                            <ListItemIcon id={text}>{index % 2 === 0 ? <SubjectOutlinedIcon id={text} /> : <AssignmentIndOutlinedIcon id={text} />}</ListItemIcon>
-                            <ListItemText primary={text} id={text} />
+
+                            <ListItemIcon onClick={handleSelectedChange} id={text}>{index % 2 === 0 ? <SubjectOutlinedIcon onClick={handleSelectedChange} id={text} /> : <AssignmentIndOutlinedIcon onClick={handleSelectedChange} id={text} />}</ListItemIcon>
+                            <ListItemText onClick={handleSelectedChange} primary={text} id={text} />
+
                         </ListItem>
                     ))}
                 </List>
@@ -213,12 +157,11 @@ export default function MiniDrawer(props) {
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.toolbar} />
-                {currentUser ? <CustomizedMenus /> : <MuiModal />}
                 <div>
                     {props.children}
                     {currentUser && JSON.stringify(currentUser.email)}
                 </div>
             </main>
-        </div >
+        </div>
     );
 }
